@@ -1,5 +1,8 @@
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.InputStream;
 
 import javax.xml.ws.Service;
@@ -35,6 +38,8 @@ import org.eclipse.swt.events.ShellAdapter;
 import org.eclipse.swt.events.ShellEvent;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+
+import com.ibm.watson.developer_cloud.service.exception.BadRequestException;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.*;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.model.ClassifiedImages;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.model.ClassifyOptions;
@@ -84,10 +89,10 @@ public class Main_gui {
     gl_s.horizontalSpacing = 20;
     gl_s.verticalSpacing = 10;
     gl_s.marginHeight = 5;
-    //Label tree_label = new Label(s, SWT.NONE);
+    Label header_label = new Label(s, SWT.NONE);
     Label pic_label = new Label(s, SWT.NONE);
     Label watson_label = new Label(s, SWT.NONE);
-    //Tree tree = new Tree(s, SWT.BORDER | SWT.CHECK | SWT.FULL_SELECTION);
+    Text fits_header = new Text(s, SWT.BORDER|SWT.MULTI|SWT.WRAP|SWT.V_SCROLL);
     Label imageField = new Label(s, SWT.BORDER);
     /*Composite classField = new Composite(s, SWT.BORDER);
     Label classLabel = new Label(classField, SWT.NONE);*/
@@ -102,11 +107,11 @@ public class Main_gui {
     GridLayout gl_class = new GridLayout(1, true);
     GridLayout gl_percent = new GridLayout(1, true);
     
-    //GridData gd_tl = new GridData();
+    GridData gd_hl = new GridData();
     GridData gd_pl = new GridData();
     GridData gd_wl = new GridData();
     GridData gd_wp = new GridData();
-    //GridData gd_tree = new GridData();
+    GridData gd_header = new GridData();
     GridData gd_image = new GridData();
    // GridData gd_cfield = new GridData();
     GridData gd_class = new GridData();
@@ -118,29 +123,19 @@ public class Main_gui {
     GridData gd_analyze = new GridData();
     GridData gd_reset = new GridData();
     
-   /* gd_tl.horizontalAlignment = GridData.CENTER;
-    gd_tl.verticalAlignment = GridData.END;
-    gd_tl.grabExcessHorizontalSpace = true;
-    gd_tl.grabExcessVerticalSpace = false;*/
+    gd_hl.horizontalAlignment = GridData.CENTER;
+    gd_hl.verticalAlignment = GridData.END;
+    gd_hl.grabExcessHorizontalSpace = true;
+    gd_hl.grabExcessVerticalSpace = false;
     gd_pl.horizontalAlignment = GridData.CENTER;
     gd_pl.verticalAlignment = GridData.END;
     gd_pl.grabExcessHorizontalSpace = true;
     gd_pl.grabExcessVerticalSpace = false;
-    gd_pl.horizontalSpan = 2;
+    //gd_pl.horizontalSpan = 2;
     gd_wl.horizontalAlignment = GridData.CENTER;
     gd_wl.verticalAlignment = GridData.END;
     gd_wl.grabExcessHorizontalSpace = true;
     gd_wl.grabExcessVerticalSpace = false;
-    /*gd_cfield.horizontalAlignment = GridData.FILL;
-    gd_cfield.grabExcessHorizontalSpace = true;
-    gd_cfield.grabExcessVerticalSpace = false;
-    gd_cfield.heightHint = 400;
-    gd_pfield.horizontalAlignment = GridData.FILL;
-    gd_pfield.grabExcessHorizontalSpace = true;
-    gd_pfield.grabExcessVerticalSpace = true;
-    gd_pfield.heightHint = 400;
-    gd_clabel.horizontalAlignment= GridData.CENTER;
-    gd_plabel.horizontalAlignment = GridData.CENTER;*/
     gd_class.horizontalAlignment = GridData.FILL;
     gd_class.verticalAlignment = GridData.FILL;
     //gd_class.heightHint = 800;
@@ -154,14 +149,14 @@ public class Main_gui {
     gd_wp.verticalAlignment = GridData.END;
     gd_wp.grabExcessHorizontalSpace = true;
     gd_wp.grabExcessVerticalSpace = false;
-    /*gd_tree.horizontalAlignment = GridData.FILL;
-    gd_tree.grabExcessHorizontalSpace = true;
-    gd_tree.grabExcessVerticalSpace = true;
-    gd_tree.heightHint = 800;*/
+    gd_header.horizontalAlignment = GridData.FILL;
+    gd_header.grabExcessHorizontalSpace = true;
+    gd_header.grabExcessVerticalSpace = true;
+    gd_header.heightHint = 800;
     gd_image.horizontalAlignment = GridData.FILL;
     gd_image.grabExcessHorizontalSpace = true;
     gd_image.grabExcessVerticalSpace = true;
-    gd_image.horizontalSpan = 2;
+    //gd_image.horizontalSpan = 2;
     //gd_image.verticalSpan = 2;
     gd_image.heightHint = 800;
     gd_txt.horizontalAlignment = GridData.FILL;
@@ -174,10 +169,10 @@ public class Main_gui {
     gd_reset.grabExcessHorizontalSpace = true;
     gd_reset.grabExcessVerticalSpace = false;
     
-    //tree_label.setLayoutData(gd_tl);
+    header_label.setLayoutData(gd_hl);
     pic_label.setLayoutData(gd_pl);
     watson_label.setLayoutData(gd_wl);
-    //tree.setLayoutData(gd_tree);
+    fits_header.setLayoutData(gd_header);
     imageField.setLayoutData(gd_image);
     //classField.setLayoutData(gd_cfield);
     watsonClass.setLayoutData(gd_class);
@@ -199,12 +194,15 @@ public class Main_gui {
     btnReset.setText("Reset");
     /*classLabel.setText("CLASS");
     classLabel.setFont(new Font(d,"Default", 15, SWT.BOLD ));*/
+    fits_header.setEditable(false);
     watsonClass.setEditable(false);
     watsonClass.setFont(new Font(d,"Calibri", 15, SWT.ITALIC ));
+    imageField.setAlignment(SWT.CENTER);
     /*percentLabel.setText("Percent");
     watsonPercent.setEditable(false);
     txtOutput.setEditable(false);*/
-    //tree_label.setText("File Explorer");
+    header_label.setText("FITS Header");
+    header_label.setFont(new Font(d, "Times New Roman", 20, SWT.BOLD));
     pic_label.setText("Image Preview");
     pic_label.setFont(new Font(d,"Times New Roman", 20, SWT.BOLD ));
     watson_label.setText("Watson Analysis");
@@ -254,7 +252,9 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
 					  .build();
 					ClassifiedImages result = service.classify(classifyOptions).execute();
 					watsonClass.setText(findClass(result.toString()));
-		} catch (Exception e1) {
+		} catch (BadRequestException bre) {
+			watsonClass.setText("Bad Request: invalid image type.");
+		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
@@ -264,6 +264,7 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
 		catch(Exception ex) {
 			txtOutput.setText("No Image Selected");
 		}
+		if(imageName.contains("gray")) watsonClass.setText("Image is too noisy to reliably classify.\nPlease select a different image.");
 	}
 
 	private String findClass(String response) {
@@ -344,7 +345,12 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
             imageField.setImage(SWTResourceManager.getImage(selected));
             txtOutput.setText(imageName);
             watsonClass.setText("");
+            fits_header.setText("");
             //watsonPercent.setText("");
+        	if(imageName.endsWith(".fits")) {
+        		imageField.setText("FITS conversion in progress");
+        		separateHeader(imagePath);
+        	}
            	}
         catch(Exception e) 
         {
@@ -353,7 +359,41 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
         
       }
 
-      public void widgetDefaultSelected(SelectionEvent event) {
+      private void separateHeader(String imagePath) {
+    	  System.out.println("Separating header");
+    	  boolean read = true;
+    	  String line = null;
+    	  StringBuilder stringBuilder = new StringBuilder();
+    	  String[] headerSplit = null;
+    	  String header = null;
+    	  File fitsFile = new File(imagePath);
+    	  BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(fitsFile));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+    	  try {
+			while(read) {
+				line = reader.readLine();
+				if(line.endsWith("END")) read = false;
+				stringBuilder.append(line);
+				stringBuilder.append("\n");
+			}
+			}
+    	  catch (Exception e) {
+			
+			e.printStackTrace();
+		}
+    	  header = stringBuilder.toString();
+    	  //header = headerSplit[0]+headerSplit[1]+headerSplit[2];
+    	  fits_header.setText(header);
+    	  
+		
+	}
+
+	public void widgetDefaultSelected(SelectionEvent event) {
     	      System.out.println("hello");
       }
     }
