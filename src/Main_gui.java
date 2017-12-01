@@ -1,12 +1,16 @@
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 
+import javax.imageio.ImageIO;
 import javax.xml.ws.Service;
 
+import org.apache.log4j.Logger;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
@@ -43,6 +47,8 @@ import com.ibm.watson.developer_cloud.service.exception.BadRequestException;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.*;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.model.ClassifiedImages;
 import com.ibm.watson.developer_cloud.visual_recognition.v3.model.ClassifyOptions;
+import ij.*;
+import ij.io.Opener;
 
 
 public class Main_gui {
@@ -65,8 +71,25 @@ public class Main_gui {
   //private String defaultPath = "/Users/Maxwell/";
   private String defaultPath = "/Users/peijiexu/Downloads/savedImg/";
   private String savePath;
+  private String pyPath = "/Users/peijiexu/Documents/mit_6000/lecture4/f2n.sh";
+  
+  private void fits2Jpg(String source, String destination )   
+  {
+	 
+       try {
+    	        Opener opener = new Opener();
+    	   		ImagePlus imgP = opener.openImage(source);
+    	   		source = source.replace(".fits", ".jpg");
+    	   		final File out = new File(source);
+    	   		BufferedImage imagen = imgP.getBufferedImage();
+    	   		ImageIO.write(imagen, "jpg", out);    	   
+       	     }
+       catch(IOException ex) 
+       {
+    	   		System.out.println("error message:" +ex);
+       }
 	
-	
+  }
   Display d;
   Shell s;
   
@@ -342,6 +365,24 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
         	savePath = defaultPath + imageName;
         	imagePath = selected;
         	System.out.println("image path: " + selected );
+            watsonClass.setText("");
+            fits_header.setText("");
+            //watsonPercent.setText("");
+            	if(imageName.endsWith(".fits")) {
+        		imageField.setText("FITS conversion in progress");
+        		System.out.println("old path: " + imagePath);
+
+        		separateHeader(imagePath);
+        		fits2Jpg(imagePath,savePath);
+        		selected = selected.replace(".fits", ".jpg");
+            	imagePath = selected;
+            	imageName = imageName.replace(".fits",".jpg");
+            	savePath = defaultPath + imageName;
+
+
+        		System.out.println("new name: " + selected);
+        	}
+       	
 
         	
         	    
@@ -372,18 +413,10 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
              imageField.setImage(SWTResourceManager.getImage(savePath));
              
           // check if it's fits image 
-             txtOutput.setText(imageName);
-             watsonClass.setText("");
-             fits_header.setText("");
-             //watsonPercent.setText("");
-             	if(imageName.endsWith(".fits")) {
-         		imageField.setText("FITS conversion in progress");
-         		separateHeader(imagePath);
-         	}
-        	
+        
         	System.out.println(imageName);
         	System.out.println(savePath);
-        	System.out.println(imagePath);
+        	System.out.println("img path: " + imagePath);
 
            // imageField.setImage(SWTResourceManager.getImage(selected));
            }
@@ -391,6 +424,8 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
         {
         	 System.out.println(e);
         }
+        txtOutput.setText(imageName);
+
       }
 
       private void separateHeader(String imagePath) {
@@ -398,7 +433,7 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
     	  boolean read = true;
     	  String line = null;
     	  StringBuilder stringBuilder = new StringBuilder();
-    	  String[] headerSplit = null;
+    	 // String[] headerSplit = null;
     	  String header = null;
     	  File fitsFile = new File(imagePath);
     	  BufferedReader reader = null;
