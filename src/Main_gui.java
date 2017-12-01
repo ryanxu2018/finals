@@ -62,7 +62,8 @@ public class Main_gui {
   private String imagePath;
   private String imageName;
   private VisualRecognition service;
-  private String defaultPath = "/Users/Maxwell/";
+  //private String defaultPath = "/Users/Maxwell/";
+  private String defaultPath = "/Users/peijiexu/Downloads/savedImg/";
   private String savePath;
 	
 	
@@ -207,35 +208,7 @@ public class Main_gui {
     pic_label.setFont(new Font(d,"Times New Roman", 20, SWT.BOLD ));
     watson_label.setText("Watson Analysis");
     watson_label.setFont(new Font(d,"Times New Roman", 20, SWT.BOLD ));
-    
-    //BELOW ALTERS IMAGES AND MAKES THEM INVALID.  FIX
-    /*imageField.addControlListener(new ControlAdapter() {
-    	@Override
-    	public void controlResized(ControlEvent e) {
-    		
-    		  try 
-    	        {
-    			  	String selected = getPath();
-    	            Image image = SWTResourceManager.getImage(selected);
-    	            ImageData imgData = image.getImageData();
-    	            imgData = imgData.scaledTo(imageField.getBounds().width, imageField.getBounds().height);
-    	            ImageLoader imgLoader = new ImageLoader();
-    	            imgLoader.data = new ImageData[] {imgData};
-    	            imgLoader.save(selected, SWT.IMAGE_COPY);
-    	            imageField.setBounds(imageField.getBounds().x,imageField.getBounds().y,imageField.getBounds().width,
-    	            						imageField.getBounds().height);
-    	            imageField.setImage(SWTResourceManager.getImage(selected));
-    	            
-    	           	}
-    	        catch(Exception e1) 
-    	        {
-    	        	 System.out.println(e1);
-    	        }
-    	        
-    		
-    		System.out.println(e);
-    	}
-    });*/
+
 
     
 
@@ -326,9 +299,9 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
         String selected = fd.open();
         setPath(selected);
         System.out.println(selected);
-        try 
+       /* try 
         {
-        	pathSplit = selected.split("\\\\");
+        	pathSplit = selected.split("/");
         	imageName = pathSplit[pathSplit.length-1];
         	imagePath = selected;
         	//BELOW SCREWS WITH IMAGES AND MAKES THEM INVALID. FIX
@@ -339,7 +312,7 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
             imgLoader.data = new ImageData[] {imgData};
             imgLoader.save(selected, SWT.IMAGE_COPY);
             imageField.setBounds(imageField.getBounds().x,imageField.getBounds().y,imageField.getBounds().width,
-            						imageField.getBounds().height);*/
+            						imageField.getBounds().height);
         	
         	
             imageField.setImage(SWTResourceManager.getImage(selected));
@@ -355,8 +328,69 @@ btnAnalyze.addSelectionListener(new SelectionAdapter() {
         catch(Exception e) 
         {
         	 System.out.println(e);
-        }
+        } */
         
+        
+        
+        try 
+        {
+        	// using "/" to split string in mac
+        	  
+        	//pathSplit = selected.split("\\\\"); // using this for the windows machine
+        	pathSplit = selected.split("/");
+        	imageName = pathSplit[pathSplit.length-1];
+        	savePath = defaultPath + imageName;
+        	imagePath = selected;
+        	System.out.println("image path: " + selected );
+
+        	
+        	    
+        	     Image image = SWTResourceManager.getImage(selected);
+             ImageData imgData = image.getImageData();
+             int newWidth ;
+             int newHeight;
+             int imgWidth = image.getBounds().width; 
+             int imgHeight =image.getBounds().height;
+             double ratio = (double)imgWidth/imgHeight;
+             if(imgWidth > imgHeight) 
+             {
+            	 newWidth = imageField.getBounds().width;
+            	 newHeight = (int) Math.round(newWidth/ratio);
+            	 }
+             else
+             {
+            	 newWidth = imageField.getBounds().width;
+            	 newHeight = (int) Math.round(newWidth/ratio);
+            	 }
+             
+             imgData = imgData.scaledTo(newWidth, newHeight);
+             ImageLoader imgLoader = new ImageLoader();
+             imgLoader.data = new ImageData[] {imgData};
+             imgLoader.save(savePath, SWT.IMAGE_COPY);
+             imageField.setBounds(imageField.getBounds().x,imageField.getBounds().y,imageField.getBounds().width,
+             						imageField.getBounds().height);
+             imageField.setImage(SWTResourceManager.getImage(savePath));
+             
+          // check if it's fits image 
+             txtOutput.setText(imageName);
+             watsonClass.setText("");
+             fits_header.setText("");
+             //watsonPercent.setText("");
+             	if(imageName.endsWith(".fits")) {
+         		imageField.setText("FITS conversion in progress");
+         		separateHeader(imagePath);
+         	}
+        	
+        	System.out.println(imageName);
+        	System.out.println(savePath);
+        	System.out.println(imagePath);
+
+           // imageField.setImage(SWTResourceManager.getImage(selected));
+           }
+        catch(Exception e) 
+        {
+        	 System.out.println(e);
+        }
       }
 
       private void separateHeader(String imagePath) {
