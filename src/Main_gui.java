@@ -54,8 +54,7 @@ public class Main_gui {
   }
   public String getPath() 
   {
-	  return path;
-  }
+	  return path;}
   
   //parameter for gui default
   private String[] pathSplit;
